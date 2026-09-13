@@ -1,5 +1,7 @@
 # 是否开启请求日志
 requestLog: true
+# 是否开启调试日志
+debug: false
 # 临时目录路径
 tmpDir: ./tmp
 # 日志目录路径

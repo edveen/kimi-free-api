@@ -322,6 +322,42 @@ Authorization: Bearer [refresh_token]
 }
 ```
 
+### 思考过程
+
+服务会将模型的思考过程与最终回答分开输出，兼容 OpenAI/DeepSeek 生态的 `reasoning_content` 字段：
+
+- 非流式响应中，思考内容位于 `choices[0].message.reasoning_content`；
+- 流式响应中，思考内容以 `choices[0].delta.reasoning_content` 增量返回，随后才是 `choices[0].delta.content` 的正式回答。
+
+思考模式默认开启，可通过请求参数 `enable_thinking`（或 `thinking`）显式控制：传 `false` 关闭，传 `true` 开启；模型名包含 `thinking` 开启、包含 `instant` 关闭。
+
+请求数据：
+```json
+{
+    "model": "kimi",
+    "messages": [
+        {
+            "role": "user",
+            "content": "9.11和9.8哪个大？"
+        }
+    ],
+    // 是否开启思考模式，默认true
+    "enable_thinking": true,
+    "stream": true
+}
+```
+
+响应数据（SSE片段，思考过程与回答分离）：
+```
+data: {"id":"cnndivilnl96vah411dg","model":"kimi","object":"chat.completion.chunk","choices":[{"index":0,"delta":{"reasoning_content":"让我比较一下这两个数..."},"finish_reason":null}],"created":1710152062}
+
+data: {"id":"cnndivilnl96vah411dg","model":"kimi","object":"chat.completion.chunk","choices":[{"index":0,"delta":{"content":"9.11 比 9.8 大。"},"finish_reason":null}],"created":1710152062}
+```
+
+如果模型未返回思考过程，响应中不会出现 `reasoning_content` 字段。
+
+文件/图片会先通过新版上传接口上传，再以**文件块**随消息一起发送，因此文档解读、图像解析同样支持思考过程。
+
 ### 文档解读
 
 提供一个可访问的文件URL或者BASE64_URL进行解析。

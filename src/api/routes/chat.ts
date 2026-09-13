@@ -20,15 +20,17 @@ export default {
             const tokens = chat.tokenSplit(request.headers.authorization);
             // 随机挑选一个refresh_token
             const token = _.sample(tokens);
-            const { model, conversation_id: convId, messages, stream, use_search } = request.body;
+            const { model, conversation_id: convId, messages, stream, use_search, enable_thinking, thinking } = request.body;
+            // 是否开启思考模式，显式传参优先
+            const enableThinking = _.isBoolean(enable_thinking) ? enable_thinking : (_.isBoolean(thinking) ? thinking : undefined);
             if (stream) {
-                const stream = await chat.createCompletionStream(model, messages, token, use_search, convId);
+                const stream = await chat.createCompletionStream(model, messages, token, use_search, convId, enableThinking);
                 return new Response(stream, {
                     type: "text/event-stream"
                 });
             }
             else
-                return await chat.createCompletion(model, messages, token, use_search, convId);
+                return await chat.createCompletion(model, messages, token, use_search, convId, enableThinking);
         }
 
     }
